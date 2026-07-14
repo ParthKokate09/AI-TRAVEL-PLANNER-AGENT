@@ -1,0 +1,29 @@
+# ============================================================
+#   AI Travel Planner Agent 2.0 — Python Dependencies
+# ============================================================
+
+# Core Framework
+flask>=3.0.0
+flask-session>=0.8.0
+Werkzeug>=3.0.0
+
+# IBM Watsonx.ai SDK
+ibm-watsonx-ai>=1.1.2
+ibm-cloud-sdk-core>=3.20.0
+
+# Environment & Configuration
+python-dotenv>=1.0.0
+
+# Utilities
+requests>=2.31.0
+urllib3>=2.0.0
+
+# Production Server
+gunicorn>=21.2.0
+
+# Future RAG / Vector DB support (optional — uncomment when needed)
+# langchain>=0.2.0
+# langchain-ibm>=0.1.0
+# faiss-cpu>=1.7.4
+# chromadb>=0.4.0
+# sentence-transformers>=2.7.0

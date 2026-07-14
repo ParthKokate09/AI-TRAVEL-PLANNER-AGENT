@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="{{ agent_name }} — AI-powered travel planner built with IBM Watsonx.ai and IBM Granite models.">
+  <title>{{ agent_name }} — AI Travel Planner</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+<!-- ═══════════════════════════════════════════════════════
+     TOPBAR
+════════════════════════════════════════════════════════════ -->
+<header class="topbar">
+  <div class="d-flex align-items-center gap-2">
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle sidebar">
+      <i class="bi bi-list"></i>
+    </button>
+    <a class="topbar-brand" href="/">
+      <div class="brand-logo">✈️</div>
+      <div>
+        <div class="brand-name"><span>{{ agent_name }}</span></div>
+        <div style="font-size:0.68rem;color:var(--text-muted);line-height:1">{{ agent_tagline }}</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="topbar-actions">
+    <!-- Status Badge -->
+    <div id="statusBadge" class="status-badge status-demo">⚡ Demo Mode</div>
+
+    <!-- Model info -->
+    <div style="display:none;align-items:center;gap:6px;font-size:0.75rem;color:var(--text-muted)" class="d-none d-md-flex" id="modelInfo">
+      <i class="bi bi-cpu"></i>
+      <span id="modelBadge">{{ model_id }}</span>
+    </div>
+
+    <!-- Dark/Light toggle -->
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+
+    <!-- Profile -->
+    <div style="width:34px;height:34px;border-radius:50%;background:var(--grad-card);display:flex;align-items:center;justify-content:center;color:white;cursor:pointer;font-size:0.85rem" onclick="showSection('profile')">
+      👤
+    </div>
+  </div>
+</header>
+
+<!-- Sidebar Overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════════════════════════ -->
+<nav class="sidebar" id="sidebar">
+  <!-- Main Navigation -->
+  <div class="sidebar-label">Main</div>
+  <button class="nav-item-custom active" data-section="dashboard">
+    <span class="nav-icon">🏠</span> Dashboard
+  </button>
+  <button class="nav-item-custom" data-section="chat">
+    <span class="nav-icon">💬</span> AI Chat
+    <span class="nav-badge">AI</span>
+  </button>
+  <button class="nav-item-custom" data-section="planner">
+    <span class="nav-icon">🗺️</span> Trip Planner
+  </button>
+  <button class="nav-item-custom" data-section="destinations">
+    <span class="nav-icon">🌍</span> Destinations
+  </button>
+
+  <!-- Tools -->
+  <div class="sidebar-label">Tools</div>
+  <button class="nav-item-custom" data-section="budget">
+    <span class="nav-icon">💰</span> Budget Calculator
+  </button>
+  <button class="nav-item-custom" data-section="checklist">
+    <span class="nav-icon">✅</span> Travel Checklist
+  </button>
+  <button class="nav-item-custom" data-section="saved">
+    <span class="nav-icon">🔖</span> Saved Trips
+    <span class="nav-badge" id="savedTripCount">0</span>
+  </button>
+
+  <!-- More -->
+  <div class="sidebar-label">Account</div>
+  <button class="nav-item-custom" data-section="profile">
+    <span class="nav-icon">👤</span> My Profile
+  </button>
+
+  <!-- Footer Info -->
+  <div style="margin-top:auto;padding:1rem 0.75rem 0.5rem;font-size:0.72rem;color:var(--text-light);border-top:1px solid var(--border);margin-top:2rem">
+    <div style="font-weight:600;margin-bottom:4px">Powered by</div>
+    <div>🤖 IBM Granite Model</div>
+    <div>☁️ IBM Watsonx.ai</div>
+    <div style="margin-top:6px;opacity:0.7">v2.0.0 · {{ agent_name }}</div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════════════════════════════════ -->
+<main class="main-content">
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ─────────────────────────────────────────────────────
+       SECTION: DASHBOARD
+  ──────────────────────────────────────────────────────── -->
+  <div class="section-panel active" id="section-dashboard">
+
+    <!-- Hero Banner -->
+    <div class="hero-banner fade-in-up">
+      <div style="position:relative;z-index:1">
+        <div class="hero-title">✈️ {{ agent_name }}</div>
+        <div class="hero-subtitle">{{ agent_tagline }} — plan your perfect journey with IBM Granite AI</div>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-num">190+</div>
+            <div class="hero-stat-label">Countries</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num">15+</div>
+            <div class="hero-stat-label">Travel Styles</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num">24/7</div>
+            <div class="hero-stat-label">AI Support</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num">4</div>
+            <div class="hero-stat-label">Budget Tiers</div>
+          </div>
+        </div>
+        <div style="margin-top:1.25rem;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn-primary-custom" style="width:auto;padding:0.6rem 1.5rem" onclick="showSection('chat')">
+            💬 Ask AI Now
+          </button>
+          <button class="btn-outline-custom" style="background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.4);color:white" onclick="showSection('planner')">
+            🗺️ Plan a Trip
+          </button>
+        </div>
+      </div>
+      <div class="hero-emoji">🌍</div>
+    </div>
+
+    <!-- Quick Stats Row -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon blue">✈️</div>
+          <div>
+            <div class="stat-value" id="chatCountStat">0</div>
+            <div class="stat-label">AI Conversations</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon purple">🗺️</div>
+          <div>
+            <div class="stat-value" id="savedTripCountStat">0</div>
+            <div class="stat-label">Saved Trips</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon green">🌍</div>
+          <div>
+            <div class="stat-value">{{ popular_destinations|length }}</div>
+            <div class="stat-label">Destinations</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon orange">⚡</div>
+          <div>
+            <div class="stat-value">IBM</div>
+            <div class="stat-label">Granite AI</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions + Mini Chat -->
+    <div class="row g-3 mb-4">
+      <!-- Quick Actions -->
+      <div class="col-lg-4">
+        <div class="panel h-100">
+          <div class="panel-header">
+            <div class="panel-title">⚡ Quick Actions</div>
+          </div>
+          <div class="panel-body">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn-outline-custom w-100 text-start" style="padding:0.65rem 1rem" onclick="showSection('chat')">
+                💬 Start AI Chat
+              </button>
+              <button class="btn-outline-custom w-100 text-start" style="padding:0.65rem 1rem" onclick="showSection('planner')">
+                🗺️ Generate Itinerary
+              </button>
+              <button class="btn-outline-custom w-100 text-start" style="padding:0.65rem 1rem" onclick="showSection('budget')">
+                💰 Estimate Budget
+              </button>
+              <button class="btn-outline-custom w-100 text-start" style="padding:0.65rem 1rem" onclick="showSection('checklist')">
+                ✅ Pack My Bags
+              </button>
+              <button class="btn-outline-custom w-100 text-start" style="padding:0.65rem 1rem" onclick="showSection('destinations')">
+                🌍 Explore Destinations
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini AI Chat preview -->
+      <div class="col-lg-8">
+        <div class="panel h-100">
+          <div class="panel-header">
+            <div class="panel-title">✈️ Popular Questions</div>
+            <button class="btn-outline-custom" style="font-size:0.78rem;padding:3px 12px" onclick="showSection('chat')">
+              Open Chat →
+            </button>
+          </div>
+          <div class="panel-body">
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              {% for reply in quick_replies %}
+              <button class="quick-chip" onclick="sendQuickReply('{{ reply }}')">
+                {{ reply }}
+              </button>
+              {% endfor %}
+            </div>
+            <div style="margin-top:1rem;padding:0.9rem;background:var(--surface-2);border-radius:var(--radius);border:1px solid var(--border)">
+              <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:6px;font-weight:600">QUICK SEARCH</div>
+              <div style="display:flex;gap:8px">
+                <input type="text" id="quickSearchInput" class="form-control-custom" placeholder="Ask anything travel-related..." onkeydown="if(event.key==='Enter'){quickSearch()}">
+                <button class="send-btn" onclick="quickSearch()" style="border-radius:var(--radius-sm);width:48px;height:42px;flex-shrink:0">➤</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Popular Destinations Preview -->
+    <div class="panel mb-4">
+      <div class="panel-header">
+        <div class="panel-title">🌟 Trending Destinations</div>
+        <button class="btn-outline-custom" style="font-size:0.78rem;padding:3px 12px" onclick="showSection('destinations')">
+          View All →
+        </button>
+      </div>
+      <div class="panel-body">
+        <div class="dest-grid">
+          {% for dest in popular_destinations[:6] %}
+          <div class="dest-card card-hover" onclick="exploreDestination('{{ dest.name }}')">
+            <div class="dest-card-img {{ dest.category }}">{{ dest.emoji }}</div>
+            <div class="dest-card-body">
+              <div class="dest-name">{{ dest.name }}</div>
+              <div class="dest-tagline">{{ dest.tagline }}</div>
+              <div class="dest-meta">
+                <div class="dest-budget">{{ dest.budget_from }}</div>
+                <div class="dest-season">{{ dest.best_season }}</div>
+              </div>
+              <span class="dest-badge {{ dest.category }}">{{ dest.category }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Budget Tiers & Travel Styles -->
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">💰 Budget Tiers</div>
+          </div>
+          <div class="panel-body">
+            {% for key, tier in budget_tiers.items() %}
+            <div class="budget-item" onclick="document.getElementById('budgetTier').value='{{ key }}';showSection('budget')" style="cursor:pointer">
+              <div class="budget-label">{{ tier.label }}</div>
+              <div class="budget-value">${{ tier.daily_usd }}/day</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">🎭 Travel Styles</div>
+          </div>
+          <div class="panel-body">
+            <div style="display:flex;flex-wrap:wrap;gap:7px">
+              {% for style, desc in travel_styles.items() %}
+              <button class="quick-chip" onclick="document.getElementById('tripStyle').value='{{ style }}';showSection('planner')" title="{{ desc }}">
+                {{ style.title() }}
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- /DASHBOARD -->
+
+
+  <!-- ─────────────────────────────────────────────────────
+       SECTION: AI CHAT
+  ──────────────────────────────────────────────────────── -->
+  <div class="section-panel" id="section-chat">
+    <div class="row g-3">
+      <div class="col-xl-8">
+        <div class="panel chat-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <div class="ai-avatar msg-avatar" style="width:28px;height:28px;font-size:0.8rem">✈️</div>
+              <span id="agentName">{{ agent_name }}</span>
+              <span id="statusBadge2" class="status-badge status-demo" style="font-size:0.68rem">⚡ Demo</span>
+            </div>
+            <button class="btn-outline-custom" id="clearChatBtn" style="font-size:0.78rem;padding:3px 12px">
+              🗑️ Clear
+            </button>
+          </div>
+
+          <!-- Quick Replies -->
+          <div class="quick-replies" id="quickRepliesBar">
+            {% for reply in quick_replies[:6] %}
+            <button class="quick-chip" onclick="sendQuickReply('{{ reply }}')">{{ reply }}</button>
+            {% endfor %}
+          </div>
+
+          <!-- Chat Messages -->
+          <div class="chat-body" id="chatBody"></div>
+
+          <!-- Input -->
+          <div class="chat-footer">
+            <div class="chat-input-wrap">
+              <textarea
+                class="chat-input"
+                id="chatInput"
+                rows="1"
+                placeholder="Ask about destinations, itineraries, hotels, visas, budget tips..."
+                aria-label="Chat message"
+              ></textarea>
+              <button class="send-btn" id="sendBtn" title="Send message">➤</button>
+            </div>
+            <div style="margin-top:6px;font-size:0.7rem;color:var(--text-light);text-align:center">
+              Powered by <strong>IBM Granite</strong> via IBM Watsonx.ai ·
+              <span id="modelBadge2" style="color:var(--primary)">{{ model_id }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Sidebar Info -->
+      <div class="col-xl-4">
+        <!-- AI Capabilities -->
+        <div class="panel mb-3">
+          <div class="panel-header">
+            <div class="panel-title">🤖 What I Can Do</div>
+          </div>
+          <div class="panel-body" style="font-size:0.83rem">
+            <div style="display:flex;flex-direction:column;gap:8px;color:var(--text-muted)">
+              <div>✈️ Full itinerary generation</div>
+              <div>🏨 Hotel & accommodation picks</div>
+              <div>🍽️ Local food & restaurant guide</div>
+              <div>💰 Budget planning & cost estimates</div>
+              <div>🛂 Visa & travel document help</div>
+              <div>🌤️ Weather-aware travel advice</div>
+              <div>🚌 Local transport navigation</div>
+              <div>🔒 Safety & emergency guidance</div>
+              <div>💎 Hidden gems & off-beat spots</div>
+              <div>🌏 Multi-city trip planning</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Replies full list -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">💡 Try Asking</div>
+          </div>
+          <div class="panel-body">
+            <div style="display:flex;flex-direction:column;gap:6px">
+              {% for reply in quick_replies %}
+              <button class="quick-chip" style="text-align:left;border-radius:var(--radius-sm);white-space:normal" onclick="sendQuickReply('{{ reply }}')">
+                {{ reply }}
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /CHAT -->
+
+
+  <!-- ─────────────────────────────────────────────────────
+       SECTION: TRIP PLANNER
+  ──────────────────────────────────────────────────────── -->
+  <div class="section-panel" id="section-planner">
+    <div class="row g-3">
+      <div class="col-lg-5">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">🗺️ Trip Planner</div>
+          </div>
+          <div class="panel-body">
+            <form id="tripPlannerForm">
+              <div class="form-field">
+                <label class="form-label-custom" for="tripDest">Destination *</label>
+                <input type="text" id="tripDest" class="form-control-custom" placeholder="e.g. Tokyo, Japan" required>
+              </div>
+              <div class="form-row">
+                <div class="form-field">
+                  <label class="form-label-custom" for="tripDays">Duration (Days)</label>
+                  <input type="number" id="tripDays" class="form-control-custom" value="7" min="1" max="30">
+                </div>
+                <div class="form-field">
+                  <label class="form-label-custom" for="tripSeason">Season / Month</label>
+                  <select id="tripSeason" class="form-control-custom">
+                    <option value="">Any season</option>
+                    <option>Spring (Mar–May)</option>
+                    <option>Summer (Jun–Aug)</option>
+                    <option>Autumn (Sep–Nov)</option>
+                    <option>Winter (Dec–Feb)</option>
+                    <option>January</option><option>February</option><option>March</option>
+                    <option>April</option><option>May</option><option>June</option>
+                    <option>July</option><option>August</option><option>September</option>
+                    <option>October</option><option>November</option><option>December</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-field">
+                  <label class="form-label-custom" for="tripBudget">Budget Tier</label>
+                  <select id="tripBudget" class="form-control-custom">
+                    {% for key, tier in budget_tiers.items() %}
+                    <option value="{{ key }}"{% if key=='standard' %} selected{% endif %}>{{ tier.label }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label class="form-label-custom" for="tripStyle">Travel Style</label>
+                  <select id="tripStyle" class="form-control-custom">
+                    {% for style in travel_styles.keys() %}
+                    <option value="{{ style }}">{{ style.title() }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="form-field">
+                <label class="form-label-custom" for="tripInterests">Interests & Notes</label>
+                <textarea id="tripInterests" class="form-control-custom" rows="3"
+                  placeholder="e.g. history, street food, photography, outdoor hiking..."></textarea>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button type="submit" class="btn-primary-custom" style="flex:1">
+                  🤖 Generate AI Itinerary
+                </button>
+                <button type="button" class="btn-outline-custom" onclick="saveCurrentTrip()" title="Save trip">
+                  🔖
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Itinerary Result -->
+      <div class="col-lg-7">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">📅 Your Itinerary</div>
+            <button class="btn-outline-custom" id="sendToChatBtn" style="font-size:0.78rem;padding:3px 12px" onclick="sendItineraryToChat()">
+              💬 Refine in Chat
+            </button>
+          </div>
+          <div class="panel-body">
+            <!-- Placeholder -->
+            <div id="itineraryPlaceholder" style="text-align:center;padding:3rem 1rem;color:var(--text-light)">
+              <div style="font-size:3.5rem;margin-bottom:1rem">🗺️</div>
+              <div style="font-size:1rem;font-weight:600;color:var(--text-muted);margin-bottom:0.4rem">Ready to plan your trip?</div>
+              <div style="font-size:0.85rem">Fill in the form and click <strong>Generate AI Itinerary</strong></div>
+            </div>
+            <!-- Result -->
+            <div id="itineraryResult" style="display:none">
+              <div id="itineraryBox" class="result-box"></div>
+              <div style="margin-top:1rem;display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn-outline-custom" onclick="saveCurrentTrip()">🔖 Save Trip</button>
+                <button class="btn-outline-custom" onclick="showSection('budget')">💰 Estimate Budget</button>
+                <button class="btn-outline-custom" onclick="showSection('checklist')">✅ Build Checklist</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /TRIP PLANNER -->
+
+
+  <!-- ─────────────────────────────────────────────────────
+       SECTION: DESTINATIONS
+  ──────────────────────────────────────────────────────── -->
+  <div class="section-panel" id="section-destinations">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">🌍 Popular Destinations</div>
+        <div style="font-size:0.8rem;color:var(--text-muted)">{{ popular_destinations|length }} destinations · Click to explore</div>
+      </div>
+      <div class="panel-body">
+        <!-- Filter chips -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.25rem">
+          <button class="quick-chip" onclick="filterDestinations('all')" id="filter-all">All</button>
+          {% set cats = popular_destinations | map(attribute='category') | unique | list %}
+          {% for cat in cats %}
+          <button class="quick-chip" onclick="filterDestinations('{{ cat }}')" id="filter-{{ cat }}">{{ cat.title() }}</button>
+          {% endfor %}
+        </div>
+        <div class="dest-grid" id="destGrid">
+          {% for dest in popular_destinations %}
+          <div class="dest-card card-hover dest-item" data-category="{{ dest.category }}" onclick="exploreDestination('{{ dest.name }}')">
+            <div class="dest-card-img {{ dest.category }}">{{ dest.emoji }}</div>
+            <div class="dest-card-body">
+              <div class="dest-name">{{ dest.name }}</div>
+              <div class="dest-tagline">{{ dest.tagline }}</div>
+              <div class="dest-meta">
+                <div class="dest-budget">{{ dest.budget_from }}</div>
+                <div class="dest-season">{{ dest.best_season }}</div>
+              </div>
+              <span class="dest-badge {{ dest.category }}">{{ dest.category }}</span>
+              <div style="margin-top:5px;font-size:0.72rem;color:var(--text-muted)">✨ {{ dest.highlight }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /DESTINATIONS -->
+
+
+  <!-- ─────────────────────────────────────────────────────
+       SECTION: BUDGET CALCULATOR
+  ──────────────────────────────────────────────────────── -->
+  <div class="section-panel" id="section-budget">
+    <div class="row g-3">
+      <div class="col-md-5">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">💰 Budget Calculator</div>
+          </div>
+          <div class="panel-body">
+            <form id="budgetForm">
+              <div class="form-field">
+                <label class="form-label-custom" for="budgetDest">Destination</label>
+                <input type="text" id="budgetDest" class="form-control-custom" placeholder="e.g. Paris, France" required>
+              </div>
+              <div class="form-row">
+                <div class="form-field">
+                  <label class="form-label-custom" for="budgetDays">Number of Days</label>
+                  <input type="number" id="budgetDays" class="form-control-custom" value="7" min="1" max="60">
+                </div>
+                <div class="form-field">
+                  <label class="form-label-custom" for="budgetTravelers">Travelers</label>
+                  <input type="number" id="budgetTravelers" class="form-control-custom" value="1" min="1" max="20">
+                </div>
+              </div>
+              <div class="form-field">
+                <label class="form-label-custom" for="budgetTier">Budget Tier</label>
+                <select id="budgetTier" class="form-control-custom">
+                  {% for key, tier in budget_tiers.items() %}
+                  <option value="{{ key }}"{% if key=='standard' %} selected{% endif %}>{{ tier.label }} — ${{ tier.daily_usd }}/day</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <button type="submit" class="btn-primary-custom">💰 Calculate Budget</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-7">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">📊 Cost Breakdown</div>
+          </div>
+          <div class="panel-body">
+            <div id="budgetPlaceholder" style="text-align:center;padding:3rem 1rem;color:var(--text-light)">
+              <div style="font-size:3.5rem;margin-bottom:1rem">💰</div>
+              <div style="font-size:0.9rem;color:var(--text-muted)">Enter your trip details to see an estimated cost breakdown</div>
+            </div>
+            <div id="budgetResult" style="display:none">
+              <div id="budgetResultBox"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Currency Quick Reference -->
+        <div class="panel mt-3">
+          <div class="panel-header">
+            <div class="panel-title">💱 Popular Currencies (vs USD)</div>
+          </div>
+          <div class="panel-body">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;font-size:0.82rem">
+              <div style="padding:0.5rem;background:var(--surface-2);border-radius:var(--radius-sm);text-align:center">
+                <div style="font-weight:700">🇪🇺 EUR</div><div style="color:var(--text-muted)">≈ 0.92</div>
+              </div>
+              <div style="padding:0.5rem;background:var(--surface-2);border-radius:var(--radius-sm);text-align:center">
+                <div style="font-weight:700">🇬🇧 GBP</div><div style="color:var(--text-muted)">≈ 0.79</div>
+              </div>
+              <div style="padding:0.5rem;background:var(--surface-2);border-radius:var(--radius-sm);text-align:center">
+                <div style="font-weight:700">🇯🇵 JPY</div><div style="color:var(--text-muted)">≈ 149</div>
+              </div>
+              <div style="padding:0.5rem;background:var(--surface-2);border-radius:var(--radius-sm);text-align:center">
+                <div style="font-weight:700">🇮🇳 INR</div><div style="color:var(--text-muted)">≈ 83</div>
+              </div>
+              <div style="padding:0.5rem;background:var(--surface-2);border-radius:var(--radius-sm);text-align:center">
+                <div style="font-weight:700">🇹🇭 THB</div><div style="color:var(--text-muted)">≈ 35</div>
+              </div>
+              <div style="padding:0.5rem;background:var(--surface-2);border-radius:var(--radius-sm);text-align:center">
+                <div style="font-weight:700">🇦🇪 AED</div><div style="color:var(--text-muted)">≈ 3.67</div>
+              </div>
+            </div>
+            <div style="margin-top:0.75rem;font-size:0.72rem;color:var(--text-light)">
+              * Rates are approximate. Always check current rates before travelling.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /BUDGET -->
+
+
+  <!-- ─────────────────────────────────────────────────────
+       SECTION: TRAVEL CHECKLIST
+  ──────────────────────────────────────────────────────── -->
+  <div class="section-panel" id="section-checklist">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">✅ Travel Checklist</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span id="checklistProgress" style="font-size:0.78rem;color:var(--text-muted)">Loading...</span>
+          <button class="btn-outline-custom" style="font-size:0.78rem;padding:3px 12px" onclick="clearChecklist()">🔄 Reset</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div style="margin-bottom:1rem;padding:0.85rem;background:linear-gradient(135deg,rgba(37,99,235,0.07),rgba(124,58,237,0.07));border-radius:var(--radius);border:1px solid var(--border)">
+          <div style="font-size:0.85rem;color:var(--text-muted)">
+            📋 <strong>Your AI-powered packing checklist.</strong>
+            Check items as you pack — progress is saved in your browser.
+            Ask the AI chat to customize this checklist for any specific destination!
+          </div>
+        </div>
+        <div id="checklistContainer">
+          <div style="text-align:center;padding:2rem;color:var(--text-muted)">Loading checklist...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /CHECKLIST -->
+
+
+  <!-- ─────────────────────────────────────────────────────
+       SECTION: SAVED TRIPS
+  ──────────────────────────────────────────────────────── -->
+  <div class="section-panel" id="section-saved">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">🔖 Saved Trips</div>
+        <button class="btn-outline-custom" style="font-size:0.78rem;padding:3px 12px" onclick="showSection('planner')">
+          + Plan New Trip
+        </button>
+      </div>
+      <div class="panel-body">
+        <div id="savedTripsContainer">
+          <div style="text-align:center;padding:2rem;color:var(--text-muted)">Loading saved trips...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /SAVED TRIPS -->
+
+
+  <!-- ─────────────────────────────────────────────────────
+       SECTION: PROFILE
+  ──────────────────────────────────────────────────────── -->
+  <div class="section-panel" id="section-profile">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="panel text-center" style="padding:1.5rem">
+          <div class="profile-avatar">👤</div>
+          <div class="profile-name">Traveller</div>
+          <div class="profile-sub">{{ agent_name }} User</div>
+          <div style="margin-top:1rem">
+            <span class="status-badge status-online">✅ Session Active</span>
+          </div>
+          <div style="margin-top:1.25rem;font-size:0.82rem;color:var(--text-muted)">
+            Your trip data is stored in your browser session and will be cleared when you close the browser.
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-8">
+        <!-- System Info -->
+        <div class="panel mb-3">
+          <div class="panel-header"><div class="panel-title">⚙️ System Information</div></div>
+          <div class="panel-body">
+            <table style="width:100%;font-size:0.88rem;border-collapse:collapse">
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:0.5rem 0;color:var(--text-muted);width:40%">Application</td>
+                <td style="padding:0.5rem 0;font-weight:600">{{ agent_name }} v2.0.0</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:0.5rem 0;color:var(--text-muted)">AI Model</td>
+                <td style="padding:0.5rem 0;font-weight:600">{{ model_id }}</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:0.5rem 0;color:var(--text-muted)">AI Platform</td>
+                <td style="padding:0.5rem 0;font-weight:600">IBM Watsonx.ai</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:0.5rem 0;color:var(--text-muted)">Framework</td>
+                <td style="padding:0.5rem 0;font-weight:600">Python Flask</td>
+              </tr>
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:0.5rem 0;color:var(--text-muted)">Watsonx Status</td>
+                <td style="padding:0.5rem 0">
+                  {% if watsonx_ready %}
+                  <span class="status-badge status-online">🟢 Connected</span>
+                  {% else %}
+                  <span class="status-badge status-demo">⚡ Demo Mode</span>
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:0.5rem 0;color:var(--text-muted)">Project</td>
+                <td style="padding:0.5rem 0;font-weight:600">IBM SkillsBuild / Edunet Foundation</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- API Setup Guide -->
+        {% if not watsonx_ready %}
+        <div class="panel" style="border-color:rgba(245,158,11,0.4);background:rgba(245,158,11,0.04)">
+          <div class="panel-header">
+            <div class="panel-title" style="color:var(--warning)">⚡ Connect IBM Watsonx.ai</div>
+          </div>
+          <div class="panel-body">
+            <ol style="font-size:0.88rem;line-height:2;color:var(--text-muted);padding-left:1.25rem">
+              <li>Create a free IBM Cloud account at <strong>cloud.ibm.com</strong></li>
+              <li>Launch IBM Watsonx.ai and create a new Project</li>
+              <li>Generate an IBM Cloud API Key from <strong>Manage → Access → API Keys</strong></li>
+              <li>Copy <code>.env.example</code> to <code>.env</code> and fill in your credentials</li>
+              <li>Restart the Flask application — Watsonx.ai will connect automatically</li>
+            </ol>
+            <div style="margin-top:0.75rem;padding:0.75rem;background:rgba(245,158,11,0.08);border-radius:var(--radius-sm);font-size:0.82rem;color:var(--text-muted)">
+              💡 The application runs in <strong>Demo Mode</strong> without credentials, with pre-built travel responses to showcase the UI.
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <!-- /PROFILE -->
+
+</main>
+<!-- /MAIN CONTENT -->
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- App JS -->
+<script src="/static/js/app.js"></script>
+
+<!-- Inline helpers not in app.js -->
+<script>
+  // Quick search from dashboard
+  function quickSearch() {
+    const input = document.getElementById('quickSearchInput');
+    if (!input || !input.value.trim()) return;
+    document.getElementById('chatInput').value = input.value.trim();
+    showSection('chat');
+    input.value = '';
+    sendMessage();
+  }
+
+  // Destination filter
+  function filterDestinations(cat) {
+    document.querySelectorAll('.dest-item').forEach(el => {
+      el.style.display = (cat === 'all' || el.dataset.category === cat) ? '' : 'none';
+    });
+    document.querySelectorAll('[id^="filter-"]').forEach(btn => btn.classList.remove('active'));
+    const active = document.getElementById('filter-' + cat);
+    if (active) active.classList.add('active');
+  }
+
+  // Sync dual status badges
+  const _origCheckStatus = window.checkStatus;
+  document.addEventListener('DOMContentLoaded', () => {
+    const observer = new MutationObserver(() => {
+      const s1 = document.getElementById('statusBadge');
+      const s2 = document.getElementById('statusBadge2');
+      if (s1 && s2) {
+        s2.className = s1.className;
+        s2.innerHTML = s1.innerHTML;
+      }
+    });
+    const s1 = document.getElementById('statusBadge');
+    if (s1) observer.observe(s1, { childList: true, subtree: true, attributes: true });
+
+    // Stat counters update
+    document.querySelectorAll('.nav-item-custom[data-section="chat"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const el = document.getElementById('chatCountStat');
+        if (el) el.textContent = parseInt(el.textContent || 0) + 1;
+      });
+    });
+  });
+</script>
+</body>
+</html>
